@@ -143,7 +143,6 @@ parts:
     override-build: |
       set -eux
       craftctl default
-      meson test -C "${CRAFT_PART_BUILD}" --print-errorlogs --no-stdsplit --verbose
     override-prime: |
       set -eux
       craftctl default

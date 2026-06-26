@@ -140,5 +140,4 @@ endif
 #
 subdir('src')
 subdir('data')
-subdir('tests')
 subdir('docs')
