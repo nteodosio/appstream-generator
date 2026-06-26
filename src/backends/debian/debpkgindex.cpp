@@ -24,6 +24,7 @@
 #include <regex>
 #include <format>
 #include <execution>
+#include <openssl/evp.h>
 
 #include "../../config.h"
 #include "../../logging.h"
@@ -340,6 +341,30 @@ std::shared_ptr<Package> DebianPackageIndex::packageForFile(
     return std::static_pointer_cast<Package>(pkg);
 }
 
+std::string checksumOfFile(std::string path){
+    std::string s;
+    FILE* f = std::fopen(path.c_str(), "rb");
+    const size_t BUFSIZE = 1<<12;
+    std::vector<unsigned char> buf(BUFSIZE);
+    unsigned char digest[EVP_MAX_MD_SIZE];
+    unsigned int digest_len = 0;
+    EVP_MD_CTX* ctx = EVP_MD_CTX_new();
+    EVP_DigestInit_ex(ctx, EVP_sha1(), nullptr);
+    size_t n;
+    while((n=std::fread(buf.data(), sizeof(buf[0]),BUFSIZE,f))>0) {
+        EVP_DigestUpdate(ctx, buf.data(), n);
+    }
+    EVP_DigestFinal_ex(ctx, digest, &digest_len);
+    EVP_MD_CTX_free(ctx);
+    std::fclose(f);
+    for (unsigned int i = 0; i < digest_len; i++) {
+        char hex[3];
+        std::sprintf(hex, "%02x", digest[i]);
+        s += hex;
+    }
+    return s;
+}
+
 bool DebianPackageIndex::hasChanges(
     std::shared_ptr<DataStore> dstore,
     const std::string &suite,
@@ -360,26 +385,39 @@ bool DebianPackageIndex::hasChanges(
     const auto currentTime = std::chrono::duration_cast<std::chrono::seconds>(mtime.time_since_epoch()).count();
 
     auto repoInfo = dstore->getRepoInfo(suite, section, arch);
+    auto checksum = checksumOfFile(indexFname);
 
     // Update mtime in repo info when we exit this function
     auto updateRepoInfo = [&]() {
         repoInfo.data["mtime"] = static_cast<std::int64_t>(currentTime);
+        repoInfo.data["checksum"] = static_cast<std::string>(checksum);
         dstore->setRepoInfo(suite, section, arch, repoInfo);
     };
 
-    auto mtimeIt = repoInfo.data.find("mtime");
-    if (mtimeIt == repoInfo.data.end()) {
+    // Checksum in the map already?
+    auto cksum = repoInfo.data.find("checksum");
+    if (cksum == repoInfo.data.end()) {
+        logDebug("No checksum found for {}, the latter was presumably never"
+                 "yet fetched. DebianPackageIndex::hasChanges is therefore"
+                 "returning TRUE.", indexFname);
         m_indexChanged[indexFname] = true;
         updateRepoInfo();
         return true;
     }
 
-    const auto pastTime = std::get<std::int64_t>(mtimeIt->second);
-    if (pastTime != currentTime) {
+    const auto pastCksum = std::get<std::string>(cksum->second);
+    if (pastCksum != checksum) {
+        logDebug("Stored checksum for {} does not match its remote counterpart;"
+                 "DebianPackageIndex::hasChanges is therefore"
+                 "returning TRUE.", indexFname);
         m_indexChanged[indexFname] = true;
         updateRepoInfo();
         return true;
     }
+
+    logDebug("Stored checksum for {} matches its remote counterpart;"
+             "DebianPackageIndex::hasChanges is therefore"
+             "returning FALSE.", indexFname);
 
     m_indexChanged[indexFname] = false;
     updateRepoInfo();

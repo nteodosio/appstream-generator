@@ -30,6 +30,7 @@
 
 namespace ASGenerator
 {
+std::string checksumOfFile(std::string path);
 
 class DebianPackageIndex : public PackageIndex
 {
