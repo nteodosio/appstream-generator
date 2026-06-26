@@ -19,6 +19,8 @@ fs = import('fs')
 #
 src_dir = include_directories('src/')
 
+ssl_dep       = dependency('openssl')
+crypto_dep    = dependency('libcrypto')
 glib_dep      = dependency('glib-2.0', version: '>= 2.80')
 appstream_dep = dependency('appstream', version: '>= 1.1.0')
 ascompose_dep = dependency('appstream-compose', version: '>= 1.1.0')

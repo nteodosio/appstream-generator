@@ -54,6 +54,8 @@ defines_h = configure_file(
 )
 
 asgen_deps = [
+  ssl_dep,
+  crypto_dep,
   glib_dep,
   appstream_dep,
   ascompose_dep,
@@ -89,8 +91,11 @@ asgen_lib_dep = declare_dependency(
 asgen_exe = executable('appstream-generator',
   ['main.cpp'],
   dependencies: [
+    ssl_dep,
+    crypto_dep,
     asgen_lib_dep,
     backward_deps,
   ],
+  link_args: ['-lcrypto','-lssl'],
   install: true
 )
