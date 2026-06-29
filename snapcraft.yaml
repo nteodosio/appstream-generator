@@ -97,7 +97,6 @@ parts:
       - gobject-introspection
       - gperf
       - itstool
-      - libcurl4-gnutls-dev
       - liblzma-dev
       - libffi-dev
       - libgirepository1.0-dev
@@ -108,7 +107,6 @@ parts:
       - libzstd-dev
       - xsltproc
     stage-packages:
-     - libcurl3t64-gnutls
      - libicu74
      - libstemmer0d
      - libxml2
@@ -123,8 +121,6 @@ parts:
       # set version from Git
       craftctl set version=$(git describe --always | sed -e 's/v//;s/-/+git/;y/-/./')
     build-environment:
-      - CC: gcc-14
-      - CXX: g++-14
       - NINJAFLAGS: -v
       - PATH: >
           $CRAFT_STAGE/usr/bin:$CRAFT_STAGE/usr/sbin:${PATH}
@@ -162,9 +158,6 @@ parts:
       - appstream
       - libfyaml
     build-packages:
-      - g++-14
-      - gcc-14
-      - curl
       - docbook-xsl
       - docbook-xml
       - ffmpeg
@@ -173,7 +166,6 @@ parts:
       - libarchive-dev
       - libbackward-cpp-dev
       - libcairo2-dev
-      - libcurl4-gnutls-dev
       - libfontconfig1-dev
       - libfreetype6-dev
       - libgdk-pixbuf2.0-dev
@@ -182,7 +174,6 @@ parts:
       - libpango1.0-dev
       - librsvg2-dev
       - libtbb-dev
-      - libssl-dev
       - libcrypto++-dev
       - libunwind-dev
       - libxml2-dev
@@ -195,7 +186,6 @@ parts:
       - libarchive13t64
       - libc-bin
       - libcairo2
-      - libcurl3t64-gnutls
       - libdatrie1
       - libfontconfig1
       - libfreetype6
@@ -240,6 +230,10 @@ parts:
       - -usr/lib/*/pkgconfig/gmodule*
       - -usr/lib/*/pkgconfig/gobject-2.0.pc
       - -usr/lib/*/pkgconfig/gthread-2.0.pc
+      - -usr/lib/*/libnghttp2.so.14.26.0
+      - -usr/lib/*/libxml2.so.2.9.14
+      - -usr/share/doc/libnghttp2-14/changelog.Debian.gz
+      - -usr/share/doc/libxml2/changelog.Debian.gz
 
   # This is a work-around for the broken Gdk Pixbuf in the Gnome SDK
   #
